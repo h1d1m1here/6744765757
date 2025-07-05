@@ -1,0 +1,53 @@
+{
+  "Katowice": {
+    "Weed": {
+      "Żabka": {
+        "Śródmieście": {"coords": [50.2599, 19.0216]},
+        "Ligota": {"coords": [50.2412, 18.9731]}
+      },
+      "Biedronka": {
+        "Koszutka": {"coords": [50.2731, 19.0210]}
+      },
+      "Lidl": {
+        "Dąb": {"coords": [50.2735, 19.0012]},
+        "Piotrowice": {"coords": [50.2072, 18.9735]}
+      }
+    },
+    "Hasz": {
+      "Biedronka": {
+        "Koszutka": {"coords": [50.2731, 19.0210]}
+      }
+    },
+    "CMC": {
+      "Żabka": {
+        "Ligota": {"coords": [50.2412, 18.9731]}
+      },
+      "Lidl": {
+        "Dąb": {"coords": [50.2735, 19.0012]}
+      }
+    }
+  },
+  "Tychy": {
+    "Weed": {
+      "Żabka": {
+        "Centrum": {"coords": [50.1372, 18.9956]}
+      },
+      "Lidl": {
+        "Paprocany": {"coords": [50.1100, 18.9500]}
+      }
+    },
+    "Hasz": {
+      "Biedronka": {
+        "Stare Tychy": {"coords": [50.1300, 18.9800]}
+      }
+    },
+    "CMC": {
+      "Żabka": {
+        "Centrum": {"coords": [50.1372, 18.9956]}
+      },
+      "Lidl": {
+        "Paprocany": {"coords": [50.1100, 18.9500]}
+      }
+    }
+  }
+}

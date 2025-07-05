@@ -1,0 +1,38 @@
+# KOMENDY UŻYTKOWNIKA
+/start – uruchomienie bota, akceptacja regulaminu
+/myid – wyświetla Twój ID Telegram
+/chanelid – wyświetla ID aktualnego czatu (grupa/kanał)
+/panel – Twój panel użytkownika: saldo NC, polecenia, historia
+/saldo – wyświetla saldo NC
+/nctop – top 10 użytkowników z największą liczbą NC
+/nchist – historia Twoich transakcji NC
+/polec – Twój link polecający i liczba poleconych
+/moje_olx – lista Twoich ogłoszeń OLX z opcją usuwania
+/subskrybuj – zapis na powiadomienia o nowościach
+/wypisz – wypisanie się z powiadomień
+
+# KOMENDY MODERACJI (tylko admin, na grupie lub w prywatnej wiadomości)
+/ban <id|@nick> lub w odpowiedzi – banuje użytkownika (usuwa z grupy i blokuje dostęp do bota)
+/warn <id|@nick> lub w odpowiedzi – ostrzeżenie dla użytkownika
+/mute <id|@nick> [czas] lub w odpowiedzi – wycisza użytkownika na podany czas (np. 10m, 1h)
+/unmute <id|@nick> lub w odpowiedzi – odcisza użytkownika
+/delwarn <id|@nick> lub w odpowiedzi – usuwa jedno ostrzeżenie (warn) użytkownika
+
+# 3 warny = automatyczny ban na 14 dni (bot pamięta liczbę warnów, bany, mute)
+
+# KOMENDY ADMINA
+/addphoto – dodaj zdjęcie/gif/mp4 do sklepu
+/all <wiadomość> – wyślij wiadomość do wszystkich użytkowników
+/promuj <ID> – dodaj sklep do promowanych (lub w odpowiedzi na ID)
+/odpromuj <ID> – usuń sklep z promowanych (lub w odpowiedzi na ID)
+/editadm – edytuj dane sklepu (nazwa, opis, linki, flaga, zdjęcie)
+/testnoty – wyślij testowe powiadomienia na grupę/kanał
+/olx_admin – panel admina do zarządzania ogłoszeniami OLX
+/stats – panel statystyk bota (użytkownicy, sklepy, opinie, top NC)
+/addnc <user_id> <ilość> – dodaj NC użytkownikowi
+
+# POZOSTAŁE
+/start – start bota (dla każdego)
+
+# UWAGA
+Komendy wpisujemy w oknie czatu z botem lub na grupie (jeśli bot jest adminem). Komendy admina wymagają uprawnień (ID zgodne z ADMIN_ID w .env).

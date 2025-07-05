@@ -1,0 +1,57 @@
+REGULAMIN KORZYSTANIA Z BOTA "Nocna24_Bot"
+§1. Definicje
+Bot – aplikacja "Nocna24_Bot", służąca do przeglądania listy sklepów, wystawiania opinii, oceniania oraz publikowania ofert.
+
+Sklep – wirtualny punkt dostępny w bocie, prowadzony przez użytkownika lub grupę użytkowników.
+
+Użytkownik – osoba korzystająca z Bota.
+
+Produkt – przedmiot (w tym wirtualny), wystawiany w ofercie sklepu lub na markecie.
+
+Targ – przestrzeń w bocie umożliwiająca publikację ofert w stylu ogłoszeniowym (ala OLX).
+
+Ranking – automatycznie tworzona lista sklepów oparta na ocenach użytkowników.
+
+§2. Charakter ogólny
+Bot "Nocna24_Bot" pełni funkcję katalogu wirtualnych sklepów oraz platformy do ocen i wymiany informacji między użytkownikami.
+
+Wszystkie produkty oferowane za pośrednictwem bota mają charakter wirtualny i fikcyjny, w tym także tzw. używki oraz inne substancje, które są elementem zabawy i nie mają odzwierciedlenia w rzeczywistości.
+
+Bot NIE umożliwia sprzedaży ani kupna realnych substancji odurzających ani żadnych nielegalnych towarów.
+
+§3. Korzystanie z systemu ocen
+Każdy użytkownik ma prawo do oceny i wyrażenia swojej opinii o sklepie po wcześniejszym kontakcie lub dokonaniu transakcji w grze.
+Użytkownik dokonujący oceny powienien mieć wcześniej kontakt oraz/lub dokonany zakup w ocenianimy w grze sklepie.
+Administrator ma prowo do zweryfikowania tych informacji !
+
+Oceny są publiczne i wpływają na pozycję sklepu w rankingu.
+
+Bot zlicza oceny, oblicza średnią i automatycznie ustala pozycje w rankingu w tym również w TOP3 oraz pełnej liście.
+
+§4. Targ
+Użytkownicy mogą publikować własne ogłoszenia na markecie.
+
+Zakazane jest publikowanie ofert zawierających realne dane osobowe, treści niezgodne z prawem, nawołujące do przemocy lub nienawiści.
+Bot nie pośredniczy w transakcjach, a jedynie udostępnia przestrzeń ogłoszeniową.
+
+Użytkownik ma prawo dodania zdjęcia do swoich ogłoszeń, nie mogą to jednak być zdjęcia ukazujące:
+-narkotyki
+-nagość / erotyka
+-dane osobowe 
+-Wszelkie niezgodne z prawem substancje oraz przedmioty (w tym broń, alkohol, zdjęcia chronione prawami autorskimi, zawietające pornografię itp.)
+Za złamanie tej zasady użytkownik zostanie dożywotnio zbanowany. 
+
+§5. Zasady ogólne
+Użytkownik korzystający z bota akceptuje niniejszy regulamin.
+
+Administratorzy zastrzegają sobie prawo do:
+- usunięcia nieodpowiednich treści,
+- blokowania użytkowników łamiących zasady,
+- modyfikacji niniejszego regulaminu bez wcześniejszego uprzedzenia.
+
+§6. Odpowiedzialność
+Administratorzy bota nie ponoszą odpowiedzialności za działania użytkowników oraz treści publikowane w markecie.
+ADMINISTRACJA nie jest w stanie kontrolować dodawanych przez użytkowników treści oraz ogłoszeń - w przypadku naruszenia regulaminu lub 
+dodawania przez innych użytkowników treści niezgodnych z prawem lub działających na niekorzyść innych osób/użytkowników, Użytkownicy
+zobowiązani są powiadomić Administratora kantaktując się z @
+Bot nie zachęca do kupna, sprzedaży ani spożycia jakichkolwiek realnych substancji psychoaktywnych. Wszystkie "produkty" w botach mają charakter fikcyjny i służą jedynie do rozgrywki w ramach gry online.

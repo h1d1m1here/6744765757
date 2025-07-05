@@ -1,0 +1,5 @@
+aiogram
+aiosqlite
+python-dotenv==1.0.1
+nest_asyncio
+tzdata

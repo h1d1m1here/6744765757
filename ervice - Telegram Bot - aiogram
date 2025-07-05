@@ -1,0 +1,20 @@
+[0;1;32m●[0m telegram-bot.service - Telegram Bot - aiogram
+     Loaded: loaded (/etc/systemd/system/telegram-bot.service; enabled; vendor preset: enabled)
+     Active: [0;1;32mactive (running)[0m since Fri 2025-06-20 04:38:55 UTC; 1h 23min ago
+   Main PID: 1022 (python)
+      Tasks: 2 (limit: 1012)
+     Memory: 88.1M
+        CPU: 2.297s
+     CGroup: /system.slice/telegram-bot.service
+             └─1022 /srv/bot/bot/bin/python /srv/bot/main.py
+
+Jun 20 06:01:59 vps15093 python[1022]: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramUnauthorizedError: Telegram server says - Unauthorized
+Jun 20 06:01:59 vps15093 python[1022]: WARNING:aiogram.dispatcher:Sleep for 5.141031 seconds and try again... (tryings = 235, bot id = 8166429025)
+Jun 20 06:02:04 vps15093 python[1022]: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramUnauthorizedError: Telegram server says - Unauthorized
+Jun 20 06:02:05 vps15093 python[1022]: WARNING:aiogram.dispatcher:Sleep for 4.882689 seconds and try again... (tryings = 236, bot id = 8166429025)
+Jun 20 06:02:09 vps15093 python[1022]: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramUnauthorizedError: Telegram server says - Unauthorized
+Jun 20 06:02:09 vps15093 python[1022]: WARNING:aiogram.dispatcher:Sleep for 4.810280 seconds and try again... (tryings = 237, bot id = 8166429025)
+Jun 20 06:02:14 vps15093 python[1022]: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramUnauthorizedError: Telegram server says - Unauthorized
+Jun 20 06:02:14 vps15093 python[1022]: WARNING:aiogram.dispatcher:Sleep for 4.837470 seconds and try again... (tryings = 238, bot id = 8166429025)
+Jun 20 06:02:19 vps15093 python[1022]: ERROR:aiogram.dispatcher:Failed to fetch updates - TelegramUnauthorizedError: Telegram server says - Unauthorized
+Jun 20 06:02:19 vps15093 python[1022]: WARNING:aiogram.dispatcher:Sleep for 5.097009 seconds and try again... (tryings = 239, bot id = 8166429025)
