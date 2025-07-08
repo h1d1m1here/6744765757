@@ -17,16 +17,35 @@ stawki_nc = {}
 async def kasyno_zasady(callback: types.CallbackQuery):
     await callback.answer()
     text = (
-        "<b>ℹ️ Zasady kasyna NC:</b>\n"
-        "- W każdej grze obstawiasz NC (Night Coiny).\n"
-        "- Wygrywasz, gdy trafisz najlepszy wynik (np. 6 na kostce, środek w dart/koszykówce).\n"
-        "- Przegrywasz, gdy wynik jest niższy.\n"
-        "- Stawkę możesz zmieniać przyciskami ➖ i ➕.\n"
-        "- Im wyższa stawka, tym wyższa potencjalna wygrana!\n"
-        "- Saldo i historia NC dostępne w menu.\n"
-        "\nPowodzenia!"
+        "📜 <b>ZASADY KASYNA NIGHT COINS</b>\n\n"
+        
+        "💰 <b>PODSTAWY:</b>\n"
+        "• Obstawiasz Night Coins (NC) w każdej grze\n"
+        "• Wygrywasz przy najlepszych wynikach\n"
+        "• Możesz zmieniać stawkę przyciskami ➖/➕\n\n"
+        
+        "🎮 <b>GRY I WYGRANE:</b>\n"
+        "🎰 <b>Sloty:</b> 3 identyczne = x5, 2 identyczne = x2\n"
+        "🎲 <b>Kostka:</b> Wygrywasz jeśli rzucisz więcej niż bot\n"
+        "🏀 <b>Koszykówka:</b> Rzut 6/6 = x3 wygrana\n"
+        "🎯 <b>Dart:</b> Bullseye (6/6) = x4 wygrana\n"
+        "🎡 <b>Ruletka:</b> Liczba = x10, Kolor = x3\n"
+        "🎟️ <b>Zdrapka:</b> Losowe wygrane do x10\n\n"
+        
+        "🎁 <b>BONUS:</b>\n"
+        "Co 30 gier otrzymujesz darmową rundę!\n\n"
+        
+        "💡 <b>WSKAZÓWKA:</b>\n"
+        "Wyższe stawki = wyższe wygrane!"
     )
-    await callback.message.answer(text, parse_mode="HTML")
+    
+    kb = InlineKeyboardBuilder()
+    kb.row(
+        types.InlineKeyboardButton(text="🎰 Rozpocznij grę", callback_data="kasyno_menu"),
+        types.InlineKeyboardButton(text="⬅️ Wróć", callback_data="kasyno_menu")
+    )
+    
+    await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
 
 # --- Licznik gier do bonusu ---
 bonus_counter = {}
@@ -34,17 +53,24 @@ bonus_counter = {}
 async def kasyno_result_menu(callback, game_callback, user_id, stawka, bonus=False):
     import random
     kb = InlineKeyboardBuilder()
+    
+    # Kompaktowy układ przycisków dla telefonów
+    kb.row(
+        types.InlineKeyboardButton(text="🔄 Powtórz grę", callback_data=game_callback),
+        types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
+    )
     kb.row(
         types.InlineKeyboardButton(text="⬅️ Wróć", callback_data="go_back"),
-        types.InlineKeyboardButton(text="🏠 HOME", callback_data="home_0"),
-        types.InlineKeyboardButton(text="😈 Powtórz", callback_data=game_callback)
+        types.InlineKeyboardButton(text="🏠 Strona główna", callback_data="home_0")
     )
+    
     # Bonus game co 30 gier
     if not bonus:
         bonus_counter[user_id] = bonus_counter.get(user_id, 0) + 1
         if bonus_counter[user_id] % 30 == 0:
-            kb.row(types.InlineKeyboardButton(text="🤩 BONUS GAME 🤩", callback_data=f"bonus_{game_callback}"))
-    await callback.message.edit_text("<b>🎲 KASYNO NC 🎲\nWybierz grę:</b>", reply_markup=kb.as_markup(), parse_mode="HTML")
+            kb.row(types.InlineKeyboardButton(text="🎁 BONUS GAME 🎁", callback_data=f"bonus_{game_callback}"))
+    
+    await callback.message.edit_text("<b>� KASYNO NIGHT COINS �\n\nWybierz następną opcję:</b>", reply_markup=kb.as_markup(), parse_mode="HTML")
 
 # --- obsługa zmiany stawki ---
 @kasyno_router.callback_query(lambda c: c.data == "stawka_plus")
@@ -71,39 +97,82 @@ async def kasyno_menu(callback: types.CallbackQuery, edit=False):
     await callback.answer()
     user_id = callback.from_user.id
     stawka = stawki_nc.get(user_id, 10)
+    nc = await get_nc(user_id)
+    
+    # Budowanie klawiatury w układzie 2x3 dla lepszej mobilnej nawigacji
     kb = InlineKeyboardBuilder()
+    
+    # Główne gry w układzie 2x3
     kb.row(
         types.InlineKeyboardButton(text="🎰 Sloty", callback_data="kasyno_sloty"),
-        types.InlineKeyboardButton(text="🎲 Kostka", callback_data="kasyno_kostka"),
-        types.InlineKeyboardButton(text="🏀 Koszykówka", callback_data="kasyno_koszykowka"),
-        types.InlineKeyboardButton(text="🎯 Dart", callback_data="kasyno_dart"),
-        types.InlineKeyboardButton(text="🎡 Ruletka", callback_data="kasyno_ruletka")
+        types.InlineKeyboardButton(text="🎲 Kostka", callback_data="kasyno_kostka")
     )
+    kb.row(
+        types.InlineKeyboardButton(text="🏀 Koszykówka", callback_data="kasyno_koszykowka"),
+        types.InlineKeyboardButton(text="🎯 Dart", callback_data="kasyno_dart")
+    )
+    kb.row(
+        types.InlineKeyboardButton(text="🎡 Ruletka", callback_data="kasyno_ruletka"),
+        types.InlineKeyboardButton(text="🎟️ Zdrapka", callback_data="kasyno_zdrapka")
+    )
+    
+    # Sekcja stawki - kompaktowy układ
     kb.row(
         types.InlineKeyboardButton(text="➖", callback_data="stawka_minus"),
-        types.InlineKeyboardButton(text=f"Stawka: {stawka} NC", callback_data="stawka_info"),
-        types.InlineKeyboardButton(text="➕", callback_data="stawka_plus"),
+        types.InlineKeyboardButton(text=f"💰 {stawka} NC", callback_data="stawka_info"),
+        types.InlineKeyboardButton(text="➕", callback_data="stawka_plus")
+    )
+    
+    # Informacje i saldo
+    kb.row(
+        types.InlineKeyboardButton(text="💎 Saldo: " + str(nc) + " NC", callback_data="kasyno_saldo"),
         types.InlineKeyboardButton(text="ℹ️ Zasady", callback_data="kasyno_zasady")
     )
+    
+    # Nawigacja
     kb.row(
         types.InlineKeyboardButton(text="⬅️ Wróć", callback_data="go_back"),
-        types.InlineKeyboardButton(text="🏠 HOME", callback_data="home_0"),
-        types.InlineKeyboardButton(text="💰 Saldo", callback_data="kasyno_saldo")
+        types.InlineKeyboardButton(text="🏠 Menu główne", callback_data="home_0")
     )
+    
+    # Ulepszony tekst z informacjami
+    text = (
+        "🎰 <b>KASYNO NIGHT COINS</b> 🎰\n\n"
+        f"💰 <b>Twoje saldo:</b> {nc} NC\n"
+        f"🎯 <b>Aktualna stawka:</b> {stawka} NC\n\n"
+        "🎮 <b>Wybierz grę:</b>"
+    )
+    
     if edit:
         try:
-            await callback.message.edit_text("<b>🎲 KASYNO NC 🎲\nWybierz grę:</b>", reply_markup=kb.as_markup(), parse_mode="HTML")
+            await callback.message.edit_text(text, reply_markup=kb.as_markup(), parse_mode="HTML")
         except Exception:
-            await callback.message.answer("<b>🎲 KASYNO NC 🎲\nWybierz grę:</b>", reply_markup=kb.as_markup(), parse_mode="HTML")
+            await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
     else:
-        await callback.message.answer("<b>🎲 KASYNO NC 🎲\nWybierz grę:</b>", reply_markup=kb.as_markup(), parse_mode="HTML")
+        await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
 
 # --- SALDO ---
 @kasyno_router.callback_query(lambda c: c.data == "kasyno_saldo")
 async def kasyno_saldo(callback: types.CallbackQuery):
     await callback.answer()
-    nc = await get_nc(callback.from_user.id)
-    await callback.message.answer(f"Twoje saldo NC: {nc}", parse_mode="HTML")
+    user_id = callback.from_user.id
+    nc = await get_nc(user_id)
+    
+    # Pobierz statystyki gracza (można rozszerzyć w przyszłości)
+    text = (
+        f"💰 <b>TWOJE SALDO KASYNA</b>\n\n"
+        f"💎 <b>Night Coins:</b> {nc} NC\n"
+        f"🎯 <b>Aktualna stawka:</b> {stawki_nc.get(user_id, 10)} NC\n\n"
+        f"📊 <b>Status:</b> {'🔥 High Roller' if nc >= 1000 else '🎮 Gracz' if nc >= 100 else '🌱 Początkujący'}"
+    )
+    
+    kb = InlineKeyboardBuilder()
+    kb.row(
+        types.InlineKeyboardButton(text="🎰 Graj dalej", callback_data="kasyno_menu"),
+        types.InlineKeyboardButton(text="⬅️ Wróć", callback_data="kasyno_menu")
+    )
+    
+    await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
 
 # --- SLOTY ---
 
@@ -197,7 +266,7 @@ async def sloty_stop(callback: types.CallbackQuery):
         text += f"Saldo: {nc2} NC"
         kb = InlineKeyboardBuilder()
         kb.row(
-            types.InlineKeyboardButton(text="🎰 Zagraj ponownie", callback_data="kasyno_sloty"),
+            types.InlineKeyboardButton(text="🎰 Kolejna gra", callback_data="kasyno_sloty"),
             types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
         )
         await callback.message.edit_text(text, reply_markup=kb.as_markup())
@@ -240,7 +309,7 @@ async def sloty_pull(callback: types.CallbackQuery):
     text += f"Saldo: {nc2} NC"
     kb = InlineKeyboardBuilder()
     kb.row(
-        types.InlineKeyboardButton(text="🎰 Zagraj ponownie", callback_data="kasyno_sloty"),
+        types.InlineKeyboardButton(text="🎰 Kolejna gra", callback_data="kasyno_sloty"),
         types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
     )
     await callback.message.edit_text(text, reply_markup=kb.as_markup())
@@ -308,7 +377,7 @@ async def kostka_rzut(callback: types.CallbackQuery):
     text += f"Saldo: {nc2} NC"
     kb = InlineKeyboardBuilder()
     kb.row(
-        types.InlineKeyboardButton(text="🎲 Zagraj ponownie", callback_data="kasyno_kostka"),
+        types.InlineKeyboardButton(text="🎲 Kolejna gra", callback_data="kasyno_kostka"),
         types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
     )
     await callback.message.answer(text, reply_markup=kb.as_markup())
@@ -325,19 +394,65 @@ async def kasyno_zdrapka(callback: types.CallbackQuery):
         await callback.answer("Masz za mało NC!", show_alert=True)
         return
     await add_nc(user_id, -cost, reason="zdrapka")
+    
+    # Symulacja zdrapywania z animacją
+    kb_wait = InlineKeyboardBuilder()
+    kb_wait.row(types.InlineKeyboardButton(text="🔄 Zdrapuję...", callback_data="zdrapka_wait"))
+    msg = await callback.message.answer("🎟️ Zdrapuję los...", reply_markup=kb_wait.as_markup())
+    
+    await asyncio.sleep(2)  # Krótka animacja oczekiwania
+    
     # Proporcjonalne szanse i wygrane
-    win = random.choices([0, cost * 2, cost * 4, cost * 10], weights=[0.7, 0.2, 0.08, 0.02])[0]
+    win_chances = [
+        (0, 60),           # 60% szans na 0 (brak wygranej)
+        (cost, 25),        # 25% szans na zwrot stawki
+        (cost * 2, 10),    # 10% szans na x2
+        (cost * 5, 4),     # 4% szans na x5
+        (cost * 10, 1)     # 1% szans na x10
+    ]
+    
+    total_weight = sum(weight for _, weight in win_chances)
+    rand_num = random.randint(1, total_weight)
+    
+    cumulative = 0
+    win = 0
+    for prize, weight in win_chances:
+        cumulative += weight
+        if rand_num <= cumulative:
+            win = prize
+            break
+    
     if win:
         await add_nc(user_id, win, reason="zdrapka_wygrana")
+    
     nc2 = await get_nc(user_id)
-    text = f"🎯 Zdrapka: {'WYGRANA!' if win else 'Pusto!'}\n"
-    if win:
-        text += f"Wygrywasz {win} NC!\n"
-    else:
-        text += "Brak wygranej.\n"
-    text += f"Saldo: {nc2} NC"
-    await callback.message.answer(text)
-    await kasyno_menu(callback)
+    
+    # Różne komunikaty w zależności od wygranej
+    if win == 0:
+        text = "�️ <b>Zdrapka</b>\n\n❌ <b>Brak wygranej</b>\nSpróbuj ponownie!"
+        emoji = "😔"
+    elif win == cost:
+        text = f"🎟️ <b>Zdrapka</b>\n\n💰 <b>Zwrot stawki!</b>\nOdzyskujesz {win} NC"
+        emoji = "😊"
+    elif win == cost * 2:
+        text = f"🎟️ <b>Zdrapka</b>\n\n🎉 <b>Podwójna wygrana!</b>\nWygrywasz {win} NC"
+        emoji = "🎉"
+    elif win == cost * 5:
+        text = f"🎟️ <b>Zdrapka</b>\n\n🔥 <b>Świetna wygrana!</b>\nWygrywasz {win} NC"
+        emoji = "🔥"
+    else:  # win == cost * 10
+        text = f"🎟️ <b>Zdrapka</b>\n\n💎 <b>JACKPOT!</b>\nWygrywasz {win} NC"
+        emoji = "💎"
+    
+    text += f"\n\n💰 <b>Saldo:</b> {nc2} NC"
+    
+    kb = InlineKeyboardBuilder()
+    kb.row(
+        types.InlineKeyboardButton(text="🎟️ Kolejna zdrapka", callback_data="kasyno_zdrapka"),
+        types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
+    )
+    
+    await msg.edit_text(text, reply_markup=kb.as_markup(), parse_mode="HTML")
 
 
 # --- INTERAKTYWNA RULETKA ---
@@ -356,13 +471,43 @@ async def kasyno_ruletka(callback: types.CallbackQuery):
     if nc < ruletka_cost:
         await callback.answer("Masz za mało NC!", show_alert=True)
         return
+    
+    # Sprawdź czy użytkownik już nie obstawił
+    if user_id in [u[0] for u in ruletka_queue]:
+        await callback.answer("Już obstawiłeś w tej rundzie!", show_alert=True)
+        text = (
+            "🎡 <b>RULETKA</b>\n\n"
+            "✅ Już obstawiłeś w bieżącej rundzie!\n"
+            f"👥 Graczy w kolejce: {len(ruletka_queue)}/{ruletka_min_players}\n\n"
+            "Oczekuj na rozpoczęcie gry..."
+        )
+        kb = InlineKeyboardBuilder()
+        kb.row(types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu"))
+        await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
+        return
+    
     # Wybór typu zakładu
     kb = InlineKeyboardBuilder()
     kb.row(
-        types.InlineKeyboardButton(text="🔢 Liczba (0-36)", callback_data="ruletka_bet_number"),
-        types.InlineKeyboardButton(text="🔴/⚫ Kolor", callback_data="ruletka_bet_color")
+        types.InlineKeyboardButton(text="🔢 LICZBA", callback_data="ruletka_bet_number"),
+        types.InlineKeyboardButton(text="🎨 KOLOR", callback_data="ruletka_bet_color")
     )
-    await callback.message.answer(f"🎡 RULETKA!\nStawka: {ruletka_cost} NC\nWybierz rodzaj zakładu:", reply_markup=kb.as_markup())
+    kb.row(types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu"))
+    
+    text = (
+        "🎡 <b>RULETKA EUROPEJSKA</b>\n\n"
+        f"💰 <b>Stawka:</b> {ruletka_cost} NC\n"
+        f"👥 <b>Min. graczy:</b> {ruletka_min_players}\n"
+        f"📊 <b>W kolejce:</b> {len(ruletka_queue)} graczy\n\n"
+        
+        "🎯 <b>RODZAJE ZAKŁADÓW:</b>\n"
+        "🔢 <b>Liczba (0-36):</b> wygrana x10\n"
+        "🎨 <b>Kolor (🔴/⚫):</b> wygrana x3\n\n"
+        
+        "Wybierz rodzaj zakładu:"
+    )
+    
+    await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
 
 # Wybór liczby
 @kasyno_router.callback_query(lambda c: c.data == "ruletka_bet_number")
@@ -370,11 +515,35 @@ async def ruletka_bet_number(callback: types.CallbackQuery):
     await callback.answer()
     user_id = callback.from_user.id
     kb = InlineKeyboardBuilder()
-    # 0-36, po 6 w wierszu
-    for i in range(0, 37, 6):
-        row = [types.InlineKeyboardButton(text=str(n), callback_data=f"ruletka_num_{n}") for n in range(i, min(i+6, 37))]
+    
+    # Kompaktowy układ 0-36, po 4 w wierszu dla lepszej mobilności
+    # Najpierw 0
+    kb.row(types.InlineKeyboardButton(text="🟢 0", callback_data="ruletka_num_0"))
+    
+    # Potem 1-36, po 4 w wierszu
+    for i in range(1, 37, 4):
+        row = []
+        for n in range(i, min(i+4, 37)):
+            # Kolorowanie liczb jak w prawdziwej rulecie
+            if n in [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]:
+                color = "🔴"
+            else:
+                color = "⚫"
+            row.append(types.InlineKeyboardButton(text=f"{color}{n}", callback_data=f"ruletka_num_{n}"))
         kb.row(*row)
-    await callback.message.answer("Wybierz liczbę (0-36):", reply_markup=kb.as_markup())
+    
+    # Przycisk powrotu
+    kb.row(types.InlineKeyboardButton(text="⬅️ Wróć do wyboru", callback_data="kasyno_ruletka"))
+    
+    await callback.message.edit_text(
+        "🎡 <b>RULETKA - WYBÓR LICZBY</b>\n\n"
+        "Wybierz liczbę (0-36):\n"
+        "🔴 Czerwone • ⚫ Czarne • 🟢 Zero\n"
+        f"💰 Stawka: {ruletka_cost} NC\n"
+        "🏆 Wygrana: x10 stawki", 
+        reply_markup=kb.as_markup(), 
+        parse_mode="HTML"
+    )
 
 # Wybór koloru
 @kasyno_router.callback_query(lambda c: c.data == "ruletka_bet_color")
@@ -383,10 +552,19 @@ async def ruletka_bet_color(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     kb = InlineKeyboardBuilder()
     kb.row(
-        types.InlineKeyboardButton(text="🔴 Czerwony", callback_data="ruletka_color_red"),
-        types.InlineKeyboardButton(text="⚫ Czarny", callback_data="ruletka_color_black")
+        types.InlineKeyboardButton(text="🔴 CZERWONY", callback_data="ruletka_color_red"),
+        types.InlineKeyboardButton(text="⚫ CZARNY", callback_data="ruletka_color_black")
     )
-    await callback.message.answer("Wybierz kolor:", reply_markup=kb.as_markup())
+    kb.row(types.InlineKeyboardButton(text="⬅️ Wróć do wyboru", callback_data="kasyno_ruletka"))
+    
+    await callback.message.edit_text(
+        "🎡 <b>RULETKA - WYBÓR KOLORU</b>\n\n"
+        "Wybierz kolor:\n"
+        f"💰 Stawka: {ruletka_cost} NC\n"
+        "🏆 Wygrana: x3 stawki", 
+        reply_markup=kb.as_markup(), 
+        parse_mode="HTML"
+    )
 
 # Zatwierdzenie liczby
 @kasyno_router.callback_query(lambda c: c.data.startswith("ruletka_num_"))
@@ -594,7 +772,7 @@ async def koszykowka_rzut(callback: types.CallbackQuery):
     text += f"Saldo: {nc2} NC"
     kb = InlineKeyboardBuilder()
     kb.row(
-        types.InlineKeyboardButton(text="🏀 Zagraj ponownie", callback_data="kasyno_koszykowka"),
+        types.InlineKeyboardButton(text="🏀 Kolejna gra", callback_data="kasyno_koszykowka"),
         types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
     )
     await callback.message.answer(text, reply_markup=kb.as_markup())
@@ -657,7 +835,7 @@ async def dart_rzut(callback: types.CallbackQuery):
     text += f"Saldo: {nc2} NC"
     kb = InlineKeyboardBuilder()
     kb.row(
-        types.InlineKeyboardButton(text="🎯 Zagraj ponownie", callback_data="kasyno_dart"),
+        types.InlineKeyboardButton(text="🎯 Kolejna gra", callback_data="kasyno_dart"),
         types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu")
     )
     await callback.message.answer(text, reply_markup=kb.as_markup())
@@ -702,3 +880,36 @@ async def addncall_handler(message: types.Message):
         await message.answer(f"Dodano {kwota} NC wszystkim użytkownikom ({len(user_ids)} osób).")
     except Exception as e:
         await message.answer(f"Błąd przy masowym dodawaniu NC: {e}")
+
+# --- Informacje o stawce ---
+@kasyno_router.callback_query(lambda c: c.data == "stawka_info")
+async def stawka_info(callback: types.CallbackQuery):
+    await callback.answer()
+    user_id = callback.from_user.id
+    stawka = stawki_nc.get(user_id, 10)
+    nc = await get_nc(user_id)
+    
+    text = (
+        f"💰 <b>INFORMACJE O STAWCE</b>\n\n"
+        f"🎯 <b>Aktualna stawka:</b> {stawka} NC\n"
+        f"💎 <b>Twoje saldo:</b> {nc} NC\n"
+        f"🎮 <b>Możliwych gier:</b> {nc // stawka if stawka > 0 else 0}\n\n"
+        
+        f"📈 <b>POTENCJALNE WYGRANE:</b>\n"
+        f"🎰 Sloty: {stawka * 2}-{stawka * 5} NC\n"
+        f"🎲 Kostka: {stawka * 2} NC\n"
+        f"🏀 Koszykówka: {stawka * 3} NC\n"
+        f"🎯 Dart: {stawka * 4} NC\n"
+        f"🎟️ Zdrapka: {stawka}-{stawka * 10} NC\n\n"
+        
+        f"💡 <b>Zakres stawek:</b> 10-100 NC"
+    )
+    
+    kb = InlineKeyboardBuilder()
+    kb.row(
+        types.InlineKeyboardButton(text="➖ Zmniejsz", callback_data="stawka_minus"),
+        types.InlineKeyboardButton(text="➕ Zwiększ", callback_data="stawka_plus")
+    )
+    kb.row(types.InlineKeyboardButton(text="🏠 Menu kasyna", callback_data="kasyno_menu"))
+    
+    await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")

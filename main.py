@@ -306,90 +306,134 @@ async def send_shops_page(message, page: int, edit=False, filter_flag=None):
         await message.delete()
     except Exception:
         pass
+    
     # Pobierz sklepy i przefiltruj po fladze jeśli trzeba
     all_shops = await get_sorted_shops()
+    original_count = len(all_shops)
+    
     if filter_flag:
         # Zamień kod na emoji
         flag_map = {"PL": "🇵🇱", "UA": "🇺🇦", "DE": "🇩🇪"}
         flag_emoji = flag_map.get(filter_flag, filter_flag)
         all_shops = [s for s in all_shops if (s.get('flag') or '').startswith(flag_emoji)]
+        filtered_count = len(all_shops)
+    
     top3 = all_shops[:3]
     rest = all_shops[3:]
     total = len(rest)
-    SHOPS_PER_PAGE_FIRST = 6
-    SHOPS_PER_PAGE_NEXT = 12
+    
+    # Zmniejszone ilości dla lepszej mobilności
+    SHOPS_PER_PAGE_FIRST = 4  # Zmniejszone z 6 na 4
+    SHOPS_PER_PAGE_NEXT = 8   # Zmniejszone z 12 na 8
+    
     if total <= SHOPS_PER_PAGE_FIRST:
         pages = 1
     else:
         pages = 1 + ((total - SHOPS_PER_PAGE_FIRST + SHOPS_PER_PAGE_NEXT - 1) // SHOPS_PER_PAGE_NEXT)
+    
     page = page % pages if pages > 0 else 0
+    
     kb = InlineKeyboardBuilder()
+    
     # Przycisk Night_Shop na samej górze
-    kb.row(InlineKeyboardButton(text="🌘Night_Shop", callback_data="noc_menu_offer"))
-    # Pierwsza strona: TOP3 + 6 kolejnych sklepów
+    kb.row(InlineKeyboardButton(text="🌘 Night Shop", callback_data="noc_menu_offer"))
+    
+    # Pierwsza strona: TOP3 + 4 kolejne sklepy
     if page == 0:
-        # TOP3
-        for idx, shop in enumerate(top3):
-            avg = shop.get('avg_rating', 0)
-            opinions = await get_opinions(shop['id'])
-            count = len(opinions)
-            flag = shop.get('flag', '') or ''
-            btn = InlineKeyboardButton(
-                text=f"🏆 {flag} {shop['shop_name']}  ⭐{avg} ({count})",
-                callback_data=f"shop_{shop['id']}"
-            )
-            kb.row(btn)
-        # 6 kolejnych sklepów (jeśli są)
+        # TOP3 - każdy w osobnym rzędzie z pełnymi informacjami
+        if top3:
+            for idx, shop in enumerate(top3):
+                avg = shop.get('avg_rating', 0)
+                opinions = await get_opinions(shop['id'])
+                count = len(opinions)
+                flag = shop.get('flag', '') or ''
+                
+                # Skrócona nazwa dla mobilności
+                shop_name = shop['shop_name']
+                if len(shop_name) > 20:
+                    shop_name = shop_name[:17] + "..."
+                
+                btn = InlineKeyboardButton(
+                    text=f"🏆 {flag} {shop_name} ⭐{avg} ({count})",
+                    callback_data=f"shop_{shop['id']}"
+                )
+                kb.row(btn)
+        
+        # 4 kolejne sklepy (jeśli są) - po 1 w rzędzie dla lepszej czytelności
         shops = rest[:SHOPS_PER_PAGE_FIRST]
-        row = []
-        for i, shop in enumerate(shops):
-            avg = shop.get('avg_rating', 0)
-            opinions = await get_opinions(shop['id'])
-            count = len(opinions)
-            flag = shop.get('flag', '') or ''
-            btn = InlineKeyboardButton(
-                text=f"{flag} {shop['shop_name']}  ⭐{avg} ({count})",
-                callback_data=f"shop_{shop['id']}"
-            )
-            row.append(btn)
-            if len(row) == 2:
-                kb.row(*row)
-                row = []
-        if row:
-            kb.row(*row)
-    else:
-        # Kolejne strony: po 12 sklepów, po 2 w wierszu
-        start = SHOPS_PER_PAGE_FIRST + (page - 1) * SHOPS_PER_PAGE_NEXT
-        end = start + SHOPS_PER_PAGE_NEXT
-        shops = rest[start:end]
-        row = []
         for shop in shops:
             avg = shop.get('avg_rating', 0)
             opinions = await get_opinions(shop['id'])
             count = len(opinions)
             flag = shop.get('flag', '') or ''
+            
+            # Skrócona nazwa
+            shop_name = shop['shop_name']
+            if len(shop_name) > 25:
+                shop_name = shop_name[:22] + "..."
+            
             btn = InlineKeyboardButton(
-                text=f"{flag} {shop['shop_name']}  ⭐{avg} ({count})",
+                text=f"{flag} {shop_name} ⭐{avg} ({count})",
                 callback_data=f"shop_{shop['id']}"
             )
-            row.append(btn)
-            if len(row) == 2:
-                kb.row(*row)
-                row = []
-        if row:
-            kb.row(*row)
-    # Przyciski nawigacyjne
-    nav = [
-        InlineKeyboardButton(text="⬅️ Wróć", callback_data="go_back"),
-        InlineKeyboardButton(text="🏠 HOME", callback_data="home_0"),
-        InlineKeyboardButton(text="➡️ Dalej", callback_data=f"page_{(page+1)%pages}")
-    ]
-    kb.row(*nav)
-    text = (
-        f"<b>──────────── LISTA SKLEPÓW ────────────</b>\n"
-        f"<i>Strona {page+1} z {pages}</i>\n"
-        "────────────────────────"
-    )
+            kb.row(btn)
+    else:
+        # Kolejne strony: po 8 sklepów, po 1 w wierszu dla lepszej czytelności
+        start = SHOPS_PER_PAGE_FIRST + (page - 1) * SHOPS_PER_PAGE_NEXT
+        end = start + SHOPS_PER_PAGE_NEXT
+        shops = rest[start:end]
+        
+        for shop in shops:
+            avg = shop.get('avg_rating', 0)
+            opinions = await get_opinions(shop['id'])
+            count = len(opinions)
+            flag = shop.get('flag', '') or ''
+            
+            # Skrócona nazwa
+            shop_name = shop['shop_name']
+            if len(shop_name) > 25:
+                shop_name = shop_name[:22] + "..."
+            
+            btn = InlineKeyboardButton(
+                text=f"{flag} {shop_name} ⭐{avg} ({count})",
+                callback_data=f"shop_{shop['id']}"
+            )
+            kb.row(btn)
+    
+    # Przyciski nawigacyjne - kompaktowe
+    nav_row = []
+    
+    # Wstecz tylko jeśli nie pierwsza strona
+    if page > 0:
+        nav_row.append(InlineKeyboardButton(text="⬅️", callback_data=f"page_{page-1}"))
+    
+    nav_row.append(InlineKeyboardButton(text="🏠", callback_data="home_0"))
+    nav_row.append(InlineKeyboardButton(text="🌑", callback_data="nocna_lista"))
+    
+    # Dalej tylko jeśli nie ostatnia strona
+    if page < pages - 1:
+        nav_row.append(InlineKeyboardButton(text="➡️", callback_data=f"page_{page+1}"))
+    
+    kb.row(*nav_row)
+    
+    # Ulepszone informacje w nagłówku
+    if filter_flag:
+        flag_names = {"PL": "🇵🇱 Polska", "UA": "🇺🇦 Ukraina", "DE": "🇩🇪 Niemcy"}
+        country_name = flag_names.get(filter_flag, filter_flag)
+        text = (
+            f"🌑 <b>NIGHT LIST - {country_name}</b>\n\n"
+            f"📊 <b>Sklepy w {country_name}:</b> {len(all_shops)}\n"
+            f"📄 <b>Strona:</b> {page+1} z {pages}\n"
+            f"🏆 <b>TOP 3</b> + pozostałe sklepy" if page == 0 else f"📄 <b>Strona:</b> {page+1} z {pages}"
+        )
+    else:
+        text = (
+            f"🌑 <b>NIGHT LIST - WSZYSTKIE SKLEPY</b>\n\n"
+            f"📊 <b>Łącznie sklepów:</b> {len(all_shops)}\n"
+            f"📄 <b>Strona:</b> {page+1} z {pages}\n"
+            f"🏆 <b>TOP 3</b> + pozostałe sklepy" if page == 0 else f"📄 <b>Strona:</b> {page+1} z {pages}"
+        )
+    
     photo_path = "noc2.png" if page == 0 else "noc4.png"
     try:
         photo = FSInputFile(photo_path)
@@ -456,41 +500,52 @@ async def show_main_menu(callback: types.CallbackQuery, **kwargs):
     await callback.answer()
     # await safe_delete(callback.message)
     print(f"[LOG] MENU: {callback.from_user.id} ({callback.from_user.username})")
-    await callback.answer()
     user = callback.from_user
     name = user.first_name or user.username or "Użytkowniku"
+    
+    # Pobierz saldo użytkownika
+    nc = await get_nc(callback.from_user.id)
+    
     powitania = [
         f"🌑 <b>Nocna24</b> - Witaj, {name}!",
         f"🌙 {name}, cieszymy się, że jesteś z nami!",
         f"⭐ {name}, życzymy udanych i bezpiecznych zakupów!",
         f"👋 Hej {name}! Gotowy na nocne okazje?"
     ]
-    text = random.choice(powitania) + "\nWybierz opcję z menu poniżej:"
+    
+    # Ulepszony tekst z saldem
+    text = (
+        f"{random.choice(powitania)}\n\n"
+        f"💰 <b>Twoje saldo:</b> {nc} NC\n"
+        f"📱 <b>Wybierz opcję z menu:</b>"
+    )
+    
     kb = InlineKeyboardBuilder()
-    # kb.row(InlineKeyboardButton(text="🔎Szukaj🔎", callback_data="search_menu"))  # USUNIĘTO z menu głównego
-    # Nowe przyciski na górze
-    kb.row(InlineKeyboardButton(text="🌑NIGHT_LIST🌑", callback_data="nocna_lista"))
-    kb.row(InlineKeyboardButton(text="⭐️PROMOWANE SKLEPY⭐️", callback_data="promowane_sklepy"))
- # PANEL zamiast TOP 3
+    
+    # Główne funkcje - po 1 w rzędzie dla lepszej mobilności
+    kb.row(InlineKeyboardButton(text="🌑 NIGHT LIST", callback_data="nocna_lista"))
+    kb.row(InlineKeyboardButton(text="⭐ PROMOWANE SKLEPY", callback_data="promowane_sklepy"))
+    
+    # Sekcja użytkownika - 2 w rzędzie
     kb.row(
-        InlineKeyboardButton(text="  PANEL", callback_data="user_panel")
+        InlineKeyboardButton(text="👤 Panel", callback_data="user_panel"),
+        InlineKeyboardButton(text="🎁 Skrzynka", callback_data="nocna_skrzynka")
     )
+    
+    # Główne usługi - 2 w rzędzie
     kb.row(
-        InlineKeyboardButton(text="ℹ️Nocna_Info", callback_data="nocna_info"),
-        InlineKeyboardButton(text="🛒 Nocny Targ", callback_data="nocny_targ")
+        InlineKeyboardButton(text="🛒 Nocny Targ", callback_data="nocny_targ"),
+        InlineKeyboardButton(text="� Kasyno", callback_data="kasyno_menu")
     )
-    kb.row(
-        InlineKeyboardButton(text="🎁 Nocna Skrzynka", callback_data="nocna_skrzynka")
-    )
-    kb.row(
-        InlineKeyboardButton(text="🎲 Kasyno NC", callback_data="kasyno_menu")
-    )
+    
+    # Informacje - kompaktowo
+    kb.row(InlineKeyboardButton(text="ℹ️ Info & Regulamin", callback_data="nocna_info"))
+    
     try:
         photo = FSInputFile("noc2.png")
         await callback.message.answer_photo(photo=photo, caption=text, reply_markup=kb.as_markup(), parse_mode="HTML")
     except Exception:
         await callback.message.answer(text, reply_markup=kb.as_markup(), parse_mode="HTML")
-    await callback.answer()
 
 # Obsługa przycisku PANEL
 @dp.callback_query(lambda c: c.data == "user_panel")
@@ -585,25 +640,48 @@ async def send_night_list_menu(message):
         await message.delete()
     except Exception:
         pass
+    
+    # Pobierz statystyki
+    shops = await get_shops()
+    total_shops = len(shops)
+    promoted_shops = await get_promoted_shops()
+    promoted_count = len(promoted_shops)
+    
     kb = InlineKeyboardBuilder()
-    # Pierwsza linia: Show All (z emoji)
-    kb.row(InlineKeyboardButton(text="🌍 Show All", callback_data="show_all_shops"))
-    # Druga linia: flagi
+    
+    # Główne opcje - czytelny układ mobilny
+    kb.row(InlineKeyboardButton(text="🌍 WSZYSTKIE SKLEPY", callback_data="show_all_shops"))
+    
+    # Filtrowanie po krajach - kompaktowy układ 3 w rzędzie
     kb.row(
-        InlineKeyboardButton(text="🇵🇱 PL", callback_data="filter_flag_PL"),
-        InlineKeyboardButton(text="🇺🇦 UA", callback_data="filter_flag_UA"),
-        InlineKeyboardButton(text="🇩🇪 DE", callback_data="filter_flag_DE")
+        InlineKeyboardButton(text="🇵🇱 Polska", callback_data="filter_flag_PL"),
+        InlineKeyboardButton(text="🇺🇦 Ukraina", callback_data="filter_flag_UA"),
+        InlineKeyboardButton(text="🇩🇪 Niemcy", callback_data="filter_flag_DE")
     )
-    # DODAJEMY PRZYCISK SZUKAJ pod flagami
-    kb.row(InlineKeyboardButton(text="🔎Szukaj🔎", callback_data="search_menu"))
-    # Trzecia linia: powrót do home
-    kb.row(InlineKeyboardButton(text="🏠 HOME", callback_data="home_0"))
+    
+    # Narzędzia - 2 w rzędzie
+    kb.row(
+        InlineKeyboardButton(text="🔎 Szukaj", callback_data="search_menu"),
+        InlineKeyboardButton(text="⭐ Promowane", callback_data="promowane_sklepy")
+    )
+    
+    # Nawigacja
+    kb.row(InlineKeyboardButton(text="🏠 Menu główne", callback_data="home_0"))
+    
     text = (
-        "<b>──────────── NIGHT LIST ────────────</b>\n"
-        "Wybierz opcję:\n"
-        "- 🌍 Show All: pokaż wszystkie sklepy\n"
-        "- Flaga: filtruj sklepy wg kraju"
+        "🌑 <b>NIGHT LIST</b> 🌑\n\n"
+        f"📊 <b>Dostępne sklepy:</b> {total_shops}\n"
+        f"⭐ <b>Promowane:</b> {promoted_count}\n\n"
+        
+        "📱 <b>OPCJE PRZEGLĄDANIA:</b>\n"
+        "🌍 <b>Wszystkie sklepy</b> - pełna lista\n"
+        "🇵🇱🇺🇦🇩🇪 <b>Filtr krajów</b> - sklepy z wybranego kraju\n"
+        "🔎 <b>Szukaj</b> - znajdź konkretny sklep lub produkt\n"
+        "⭐ <b>Promowane</b> - najlepsze sklepy platformy\n\n"
+        
+        "💡 <b>Wskazówka:</b> Sprawdź oceny i opinie przed zakupem!"
     )
+    
     photo_path = "noc2.png"
     try:
         photo = FSInputFile(photo_path)
@@ -673,53 +751,88 @@ async def show_shop_menu(callback: types.CallbackQuery, **kwargs):
         url = f"https://t.me/{username}" if username else link
         return {"text": f"{emoji or ''} {label}".strip(), "url": url}
 
+    # Organizacja przycisków w bardziej mobilną strukturę
     buttons = []
-    row1 = []
+    
+    # Linki do sklepu - kompaktowe, po 2 w rzędzie
+    links_row1 = []
     btn = format_link_button(shop.get("bot_link"), "BOT", "🤖")
     if btn:
-        row1.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
+        links_row1.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
     btn = format_link_button(shop.get("operator_link"), "Operator", "👤")
     if btn:
-        row1.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
-    if row1:
-        buttons.append(row1)
-    row2 = []
+        links_row1.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
+    if links_row1:
+        buttons.append(links_row1)
+    
+    links_row2 = []
     btn = format_link_button(shop.get("chat_link"), "Chat", "💬")
     if btn:
-        row2.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
+        links_row2.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
     btn = format_link_button(shop.get("www"), "Website", "🌐")
     if btn:
-        row2.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
-    btn = format_link_button(shop.get("support_link"), "Support", "🛟")
-    if btn:
-        row2.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
-    btn = format_link_button(shop.get("channel_link"), "Kanał", "📢")
-    if btn:
-        row2.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
-    if row2:
-        buttons.append(row2)
-    # --- ULUBIONE ---
+        links_row2.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
+    if links_row2:
+        buttons.append(links_row2)
+    
+    # Dodatkowe linki jeśli są
+    if shop.get("support_link") or shop.get("channel_link"):
+        links_row3 = []
+        btn = format_link_button(shop.get("support_link"), "Support", "🛟")
+        if btn:
+            links_row3.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
+        btn = format_link_button(shop.get("channel_link"), "Kanał", "📢")
+        if btn:
+            links_row3.append(InlineKeyboardButton(text=btn["text"], url=btn["url"]))
+        if links_row3:
+            buttons.append(links_row3)
+    
+    # Ulubione - osobny rząd
     fav = await is_favorite(callback.from_user.id, shop_id)
     if fav:
         buttons.append([InlineKeyboardButton(text="💔 Usuń z ulubionych", callback_data=f"unfav_{shop_id}")])
     else:
         buttons.append([InlineKeyboardButton(text="❤️ Dodaj do ulubionych", callback_data=f"fav_{shop_id}")])
-    buttons.append([InlineKeyboardButton(text="😈Twoja opinia😇", callback_data=f"recenzja_{shop['id']}")])
-    buttons.append([InlineKeyboardButton(text="📝 Zobacz opinie", callback_data=f"opinions_{shop['id']}")])
-    bot_username = await get_bot_username()
-    share_url = f"https://t.me/{bot_username}/?start=shop_{shop_id}"
+    
+    # Akcje użytkownika - po 2 w rzędzie
+    buttons.append([
+        InlineKeyboardButton(text="⭐ Oceń sklep", callback_data=f"recenzja_{shop['id']}"),
+        InlineKeyboardButton(text="📝 Opinie", callback_data=f"opinions_{shop['id']}")
+    ])
+    
+    # Udostępnianie
     buttons.append([InlineKeyboardButton(text="🔗 Udostępnij sklep", callback_data=f"share_shop_{shop_id}")])
+    
+    # Nawigacja - kompaktowa
     shops = await get_shops()
     shop_ids = [s['id'] for s in shops]
     idx = shop_ids.index(shop_id) if shop_id in shop_ids else -1
+    
     nav_buttons = []
-    nav_buttons.append(InlineKeyboardButton(text="⬅️ Wróć", callback_data="nocna_lista"))
-    nav_buttons.append(InlineKeyboardButton(text="🏠 HOME", callback_data="home_0"))
+    if idx > 0:
+        nav_buttons.append(InlineKeyboardButton(text="⬅️ Poprzedni", callback_data=f"shop_{shop_ids[idx-1]}"))
+    
+    nav_buttons.append(InlineKeyboardButton(text="🌑 Lista", callback_data="nocna_lista"))
+    nav_buttons.append(InlineKeyboardButton(text="🏠", callback_data="home_0"))
+    
     if idx != -1 and idx < len(shop_ids) - 1:
         nav_buttons.append(InlineKeyboardButton(text="➡️ Następny", callback_data=f"shop_{shop_ids[idx+1]}"))
+    
     buttons.append(nav_buttons)
+    
     kb = InlineKeyboardMarkup(inline_keyboard=buttons)
-    text = f"<b>{shop['shop_name']}</b>\n{shop['description']}\n\n<code>Odwiedziny: {shop['clicks']}</code>\nŚrednia ocena: <b>{avg}</b> ({len(ratings)} ocen)\nOpinie: <b>{len(opinions)}</b>"
+    
+    # Ulepszone informacje o sklepie
+    text = (
+        f"🏪 <b>{shop['shop_name']}</b> {shop.get('flag', '')}\n\n"
+        f"📝 <b>Opis:</b>\n{shop['description']}\n\n"
+        f"📊 <b>Statystyki:</b>\n"
+        f"⭐ Średnia ocena: <b>{avg}</b> ({len(ratings)} ocen)\n"
+        f"💬 Opinie: <b>{len(opinions)}</b>\n"
+        f"👁️ Odwiedziny: <b>{shop['clicks']}</b>\n\n"
+        f"💡 <b>Wskazówka:</b> Sprawdź opinie przed zakupem!"
+    )
+    
     media_path = shop['photo'] if shop['photo'] else None
     try:
         if media_path:
@@ -2095,14 +2208,9 @@ async def review_quality(callback: types.CallbackQuery, state: FSMContext):
 @dp.callback_query(lambda c: c.data == "review_skip_comment")
 async def review_skip_comment(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(comment=None)
-    await state.set_state(ReviewStates.waiting_for_photo)
-    kb = InlineKeyboardBuilder()
-    kb.row(
-        InlineKeyboardButton(text="Pomiń", callback_data="review_skip_photo"),
-        InlineKeyboardButton(text="⬅️ Wróć", callback_data="review_back_comment"),
-        InlineKeyboardButton(text="🏠 Home", callback_data="home_0")
-    )
-    await callback.message.answer("Wyślij zdjęcie (opcjonalnie) lub wybierz 'Pomiń':", reply_markup=kb.as_markup())
+    await show_review_summary(callback.message, state)
+    await state.set_state(ReviewStates.summary)
+    await callback.answer("Pominięto komentarz.")
 
 @dp.message(ReviewStates.waiting_for_comment)
 async def review_comment(message: types.Message, state: FSMContext):
@@ -2111,28 +2219,10 @@ async def review_comment(message: types.Message, state: FSMContext):
         await message.answer("Komentarz musi mieć minimum 10 znaków lub wybierz 'Pomiń'.")
         return
     await state.update_data(comment=text)
-    await state.set_state(ReviewStates.waiting_for_photo)
-    kb = InlineKeyboardBuilder()
-    kb.row(
-        InlineKeyboardButton(text="Pomiń", callback_data="review_skip_photo"),
-        InlineKeyboardButton(text="⬅️ Wróć", callback_data="review_back_comment"),
-        InlineKeyboardButton(text="🏠 Home", callback_data="home_0")
-    )
-    await message.answer("Wyślij zdjęcie (opcjonalnie) lub wybierz 'Pomiń':", reply_markup=kb.as_markup())
-
-@dp.callback_query(lambda c: c.data == "review_skip_photo")
-async def review_skip_photo(callback: types.CallbackQuery, state: FSMContext):
-    await state.update_data(photo_id=None)
-    await show_review_summary(callback.message, state)
-    await state.set_state(ReviewStates.summary)
-    await callback.answer()
-
-@dp.message(ReviewStates.waiting_for_photo, F.photo)
-async def review_photo(message: types.Message, state: FSMContext):
-    photo_id = message.photo[-1].file_id if message.photo else None
-    await state.update_data(photo_id=photo_id)
     await show_review_summary(message, state)
     await state.set_state(ReviewStates.summary)
+
+# --- Usunięto etap zdjęcia, uproszczony FSM ---
 
 async def show_review_summary(message, state):
     from db import add_opinion, user_opinion_last_24h
